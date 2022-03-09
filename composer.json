@@ -1,0 +1,32 @@
+{
+  "name": "libs/nsi-client",
+  "description": "Библиотека, упрощающая работу с НСИ",
+  "type": "library",
+  "require": {
+    "ext-soap": "*",
+    "ext-simplexml": "*",
+    "servo/fluidxml": "^1.21",
+    "ramsey/uuid": "^4"
+  },
+  "authors": [
+    {
+      "name": "Dmitriy Karavanov",
+      "email": "karavanovd@gmail.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {
+      "Nsi\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Nsi\\Tests\\": "tests/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "symfony/var-dumper": "^5.2"
+  }
+}

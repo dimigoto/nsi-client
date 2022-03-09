@@ -1,0 +1,45 @@
+# Publishes a tag/branch to Composer Packages of the current project
+tests:
+  image: phpdockerio/php74-cli # для юнит-тестов нужен образ с php7.4 и composer
+  stage: test
+  script:
+    - id
+    - echo "Hello from docker-container '$HOSTNAME', job '$CI_JOB_NAME', stage '$CI_JOB_STAGE'!"
+    - ls -lah
+    # Собрать проект: composer install
+    # Протестировать unit-tests
+    - php -v
+    - apt-get update && apt-get install -y php7.4-soap
+
+    - composer install
+    # Запускаем тесты
+    - ls -lah
+    - echo "Погнали тесты!.."
+    - php vendor/bin/phpunit ./tests
+  tags:
+    - preferred runner # этот раннер выбираем, т.к. на нем сконфигурирован прокси и он нормально качает зависимости
+  cache:
+    key: vendor
+    paths:
+      - vendor
+
+publish:
+  image: curlimages/curl:latest
+  stage: deploy
+  variables:
+    URL: "$CI_SERVER_PROTOCOL://$CI_SERVER_HOST:$CI_SERVER_PORT/api/v4/projects/$CI_PROJECT_ID/packages/composer?job_token=$CI_JOB_TOKEN"
+  script:
+    - version=$([[ -z "$CI_COMMIT_TAG" ]] && echo "branch=$CI_COMMIT_REF_NAME" || echo "tag=$CI_COMMIT_TAG")
+    - insecure=$([ "$CI_SERVER_PROTOCOL" = "http" ] && echo "--insecure" || echo "")
+    - response=$(curl -s -w "\n%{http_code}" $insecure --data $version $URL)
+    - code=$(echo "$response" | tail -n 1)
+    - body=$(echo "$response" | head -n 1)
+    # Output state information
+    - if [ $code -eq 201 ]; then
+        echo "Package created - Code $code - $body";
+      else
+        echo "Could not create package - Code $code - $body";
+        exit 1;
+      fi
+  only:
+    - tags
